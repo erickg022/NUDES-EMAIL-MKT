@@ -10,7 +10,7 @@ Proyecto independiente: no toca la web eatnudes.com.
 ## Puesta en marcha (una vez)
 1. Vercel → Storage → crear un **Blob store** y conectarlo a este proyecto (Production y Preview).
    Esto crea sola la variable `BLOB_READ_WRITE_TOKEN`.
-2. Vercel → Settings → Environment Variables → `EMAIL_BUILDER_KEY` = la clave para subir fotos.
+2. (Opcional) Vercel → Settings → Environment Variables → `EMAIL_BUILDER_KEY` = contraseña para subir fotos. Sin ella, solo se aceptan subidas desde la página del creador.
 3. Redeploy.
 
 ## Uso

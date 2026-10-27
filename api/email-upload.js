@@ -3,7 +3,8 @@
 // Devuelve una URL pública y permanente para usarla dentro de los emails.
 //
 // Variables de entorno (se configuran en Vercel, NUNCA en el código):
-//   EMAIL_BUILDER_KEY      → clave que el cliente escribe en el creador para poder subir fotos
+//   EMAIL_BUILDER_KEY      → OPCIONAL. Si existe, el creador pide esta clave para subir fotos.
+//                            Si no existe, solo se aceptan subidas desde la propia página del creador.
 //   BLOB_READ_WRITE_TOKEN  → la crea Vercel sola al conectar un Blob store al proyecto
 
 import { put } from '@vercel/blob';
@@ -25,12 +26,23 @@ function claveCorrecta(recibida) {
   const esperada = process.env.EMAIL_BUILDER_KEY || '';
   const a = Buffer.from(String(recibida || ''));
   const b = Buffer.from(esperada);
-  return esperada.length > 0 && a.length === b.length && timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Sin clave configurada: solo se aceptan peticiones que vienen de la propia página del creador.
+function mismaWeb(req) {
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const origen = req.headers.origin || req.headers.referer || '';
+  try { return !!host && new URL(origen).host === host; } catch { return false; }
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido.' });
-  if (!claveCorrecta(req.headers['x-builder-key'])) return res.status(401).json({ error: 'Clave incorrecta.' });
+  if (process.env.EMAIL_BUILDER_KEY) {
+    if (!claveCorrecta(req.headers['x-builder-key'])) return res.status(401).json({ error: 'Clave incorrecta.' });
+  } else if (!mismaWeb(req)) {
+    return res.status(403).json({ error: 'Las fotos solo se pueden subir desde el creador.' });
+  }
 
   const { name, type, data } = req.body || {};
   const ext = TIPOS[type];

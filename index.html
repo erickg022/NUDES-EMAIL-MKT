@@ -327,12 +327,17 @@ function toBase64(blob){
 }
 async function uploadBlob(blob, name){
   if(!hosted()) throw new Error("Para subir fotos abre el creador desde su dirección web. Desde un archivo en tu ordenador solo puedes pegar enlaces.");
-  let key = getPass();
-  if(!key){ key = (prompt("Clave del creador de emails (te la da tu desarrollador):")||"").trim(); if(!key) throw new Error("Sin clave no se pueden subir fotos."); setPass(key); }
-  const r = await fetch(UPLOAD_API, {method:"POST", headers:{"Content-Type":"application/json","x-builder-key":key},
-    body: JSON.stringify({name, type:blob.type, data: await toBase64(blob)})});
+  const body = JSON.stringify({name, type:blob.type, data: await toBase64(blob)});
+  const send = key => fetch(UPLOAD_API, {method:"POST", headers:{"Content-Type":"application/json","x-builder-key":key||""}, body});
+  let r = await send(getPass());
+  if(r.status===401){ // solo si se configuró una contraseña en Vercel
+    const key = (prompt("Contraseña para subir fotos:")||"").trim();
+    if(!key) throw new Error("Hace falta la contraseña para subir fotos.");
+    r = await send(key);
+    if(r.status===401){ setPass(""); throw new Error("Contraseña incorrecta. Vuelve a intentarlo."); }
+    setPass(key);
+  }
   const j = await r.json().catch(()=>({}));
-  if(r.status===401){ setPass(""); throw new Error("Clave incorrecta. Vuelve a intentarlo."); }
   if(!r.ok || !j.url) throw new Error(j.error || ("Error al subir ("+r.status+")."));
   return j.url;
 }
@@ -420,7 +425,7 @@ function renderForm(){
     if(s.fonts) h += `<label>Títulos</label><select data-f="head">${Object.entries(FONTS_HEAD).map(([k,v])=>`<option value="${k}" ${state.fonts.head===k?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
 <label>Texto</label><select data-f="body">${Object.entries(FONTS_BODY).map(([k,v])=>`<option value="${k}" ${state.fonts.body===k?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
 <div class="hint">El email solo puede usar tipografías que tenga el ordenador o móvil de quien lo lee. Instrument Serif se ve en Apple Mail; Gmail y Outlook muestran Georgia.</div>`;
-    if(s.settings) h += `<label>Clave para subir fotos</label><input type="password" id="pass" value="${esc(getPass())}" placeholder="Te la da tu desarrollador">
+    if(s.settings) h += `<label>Contraseña para subir fotos</label><input type="password" id="pass" value="${esc(getPass())}" placeholder="Solo si se configuró una"><div class="hint">Normalmente no hace falta.</div>
 <label>Texto de vista previa en la bandeja</label><input type="text" data-k="pre" value="${esc(state.data.pre)}">
 <div class="lock" style="margin-top:14px">Las redes, el texto legal y el enlace “Darte de baja” no se pueden editar. Brevo los necesita para enviar.</div>
 <div class="bar" style="margin-top:14px"><button type="button" class="btn alt sm" id="reset">EMPEZAR DE CERO</button></div>`;
