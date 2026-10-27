@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>NUDES · Creador de emails</title>
+<style>
+  :root{--y:#F2E49B;--d:#1A1410;--c:#FDFAF2;--g:#8C8070;--line:#E4DDC9;--err:#B3261E;--warn:#9A6700;--ok:#1E7B3A;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:var(--c);color:var(--d);font-size:14px}
+  header{background:var(--d);color:var(--y);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:20px;font-weight:400;font-style:italic;font-family:Georgia,serif}
+  header .sub{color:#D4CCBC;font-size:12px}
+  .grid{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 56px)}
+  aside{border-right:1px solid var(--line);padding:18px 20px 120px;overflow:auto;max-height:calc(100vh - 56px)}
+  main{background:#EDE6D0;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details:first-of-type{border-top:0;padding-top:0}
+  summary{cursor:pointer;font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:var(--g);font-weight:700;list-style:none;display:flex;justify-content:space-between}
+  summary::after{content:"+";font-size:16px;line-height:12px}
+  details[open] summary::after{content:"–"}
+  label{display:block;font-weight:700;font-size:12px;margin:12px 0 4px}
+  .hint{font-weight:400;color:var(--g);font-size:11px;margin-top:3px}
+  input[type=text],input[type=password],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--d)}
+  textarea{resize:vertical;min-height:60px}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--y);border-color:var(--d)}
+  .row2{display:grid;grid-template-columns:110px 1fr;gap:8px}
+  .colors{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 12px}
+  .colors label{display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0}
+  .colors input[type=color]{width:38px;height:30px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;cursor:pointer;flex:none}
+  .check{display:flex;align-items:center;gap:8px;font-weight:400}
+  .img-field{display:flex;gap:8px;align-items:center}
+  .img-field img{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#fff;flex:none}
+  .img-field input{flex:1;min-width:0}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:0;background:var(--d);color:var(--y);padding:10px 20px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:1.2px;cursor:pointer}
+  .btn.alt{background:#fff;color:var(--d);border:1px solid var(--d)}
+  .btn.sm{padding:7px 14px;font-size:11px}
+  .btn[disabled]{opacity:.5;cursor:wait}
+  .seg{display:inline-flex;border:1px solid var(--d);border-radius:999px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:7px 14px;font-weight:700;font-size:12px;cursor:pointer}
+  .seg button.on{background:var(--d);color:var(--y)}
+  .spacer{flex:1}
+  .stage{flex:1;display:flex;justify-content:center;align-items:flex-start;overflow:auto}
+  iframe{border:0;background:#fff;border-radius:12px;height:calc(100vh - 190px);min-height:520px;box-shadow:0 2px 14px rgba(0,0,0,.12);max-width:100%}
+  #checks{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12px}
+  #checks .it{margin:3px 0}
+  .e{color:var(--err)} .w{color:var(--warn)} .k{color:var(--ok)}
+  .lock{background:#fff;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--g)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--d);color:var(--y);padding:12px 22px;border-radius:999px;font-weight:700;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90vw;text-align:center}
+  .toast.on{opacity:1}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}aside{max-height:none;border-right:0;border-bottom:1px solid var(--line)}iframe{height:640px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>NUDES · Creador de emails</h1>
+  <span class="sub">Collabs, eventos y lanzamientos</span>
+</header>
+<div class="grid">
+  <aside id="form"></aside>
+  <main>
+    <div class="bar">
+      <div class="seg" id="view"><button data-w="640" class="on">Ordenador</button><button data-w="390">Móvil</button></div>
+      <span class="spacer"></span>
+      <button class="btn alt sm" id="dl">DESCARGAR .HTML</button>
+      <button class="btn" id="copy">COPIAR HTML</button>
+    </div>
+    <div id="checks"></div>
+    <div class="stage"><iframe id="pv" title="Vista previa del email" style="width:640px"></iframe></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =================== Configuración =================== */
+const SITE = "https://www.eatnudes.com";
+const UPLOAD_API = "/api/email-upload";
+const HOSTED = location.protocol.startsWith("http");
+// Imágenes fijas: se sirven desde este mismo proyecto (/assets). Abierto como archivo local, se usan las de GitHub.
+const RAW = "https://raw.githubusercontent.com/erickg022/EATNUDESWEBSITE/";
+const asset = (file, rawPath) => HOSTED ? location.origin + "/assets/" + file : RAW + rawPath + file;
+const LOGOS = {
+  dark:  asset("nudes-logo-dark.png", "main/email-assets/"),
+  white: asset("nudes-logo-white.png", "main/email-assets/")
+};
+const LS_KEY = "nudes-collab-builder-v1";
+const LS_PASS = "nudes-builder-key";
+
+const FONTS_HEAD = {
+  instrument: {name:"Instrument Serif (Georgia en Gmail)", css:"'Instrument Serif',Georgia,'Times New Roman',serif", link:"https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"},
+  georgia:    {name:"Georgia", css:"Georgia,'Times New Roman',serif"},
+  times:      {name:"Times New Roman", css:"'Times New Roman',Times,serif"},
+  helvetica:  {name:"Helvetica / Arial", css:"'Helvetica Neue',Helvetica,Arial,sans-serif"},
+  trebuchet:  {name:"Trebuchet MS", css:"'Trebuchet MS',Arial,sans-serif"}
+};
+const FONTS_BODY = {
+  helvetica: {name:"Helvetica / Arial", css:"'Helvetica Neue',Helvetica,Arial,sans-serif"},
+  verdana:   {name:"Verdana", css:"Verdana,Geneva,sans-serif"},
+  trebuchet: {name:"Trebuchet MS", css:"'Trebuchet MS',Arial,sans-serif"},
+  georgia:   {name:"Georgia", css:"Georgia,'Times New Roman',serif"}
+};
+
+const DEFAULT = {
+  data:{
+    pre:"Mira los detalles de la nueva collab.",
+    logo:"dark",
+    menuText:"MENU", menuLink:SITE+"/products.html",
+    storesText:"STORES", storesLink:SITE+"/#locations",
+    poster:asset("collab-sonar-cartel.jpg","email-assets-staging/email-assets/"), posterAlt:"Cartel del evento", posterLink:SITE,
+    posterCap:"Unreleased ID’s Pop-Up",
+    eyebrow:"Immersive Event · Barcelona",
+    title:"Unreleased ID’s Pop-Up x OffSónar",
+    r1l:"CUÁNDO", r1v:"Jueves 18 de junio, de 18:00 a 20:00",
+    r2l:"DÓNDE",  r2v:"NUDES El Born · C/ Rec 10, Barcelona",
+    r3l:"MÁS",    r3v:"Los 100 primeros: entrada garantizada y un smoothie gratis",
+    r4l:"", r4v:"",
+    body:"A high-vibe music and wellness fusion. We partnered with Unreleased during OffSónar week in Barcelona, with live DJ sets by Arodes and friends, custom-crafted smoothies and a packed house. An immersive pop-up for music lovers and wellness people.",
+    btn:"VER MÁS", btnLink:SITE,
+    photo:asset("collab-sonar-foto.jpg","email-assets-staging/email-assets/"), photoAlt:"Foto de la collab",
+    photoCap:"En NUDES El Born",
+    slogan:"Eat Better\nLast Longer",
+    stores:"BARCELONA: El Born · Eixample Rambla · Francesc Macià · Repeat Wellness Club\nMADRID: C. de San Mateo, 30, 28004",
+    waves:true, tilt:true
+  },
+  colors:{
+    outer:"#FFFFFF", card:"#FDFAF2", text:"#1A1410", muted:"#4A3F38", line:"#D4CCBC",
+    polaroid:"#FFFFFF", polaroidBorder:"#E6DFCC", btnBg:"#F2E49B", btnText:"#1A1410",
+    foot:"#F2E49B", footText:"#1A1410"
+  },
+  fonts:{head:"instrument", body:"helvetica"},
+  waveCache:{}
+};
+
+/* =================== Estado =================== */
+const clone = o => JSON.parse(JSON.stringify(o));
+let state = load() || clone(DEFAULT);
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if(!s || !s.data) return null;
+    return {data:{...DEFAULT.data,...s.data}, colors:{...DEFAULT.colors,...s.colors}, fonts:{...DEFAULT.fonts,...s.fonts}, waveCache:s.waveCache||{}};
+  }catch(e){ return null; }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* =================== Utilidades =================== */
+const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const br = s => esc(s).replace(/\r?\n/g,"<br>");
+const paras = (s, style) => String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean).map(p=>`<p style="${style}">${br(p)}</p>`).join("\n");
+const lum = h => { const m=/^#?([0-9a-f]{6})$/i.exec(h); if(!m) return 0; const n=parseInt(m[1],16);
+  return [16,8,0].map(s=>((n>>s)&255)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0); };
+const ratio = (a,b) => { const x=lum(a), y=lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
+const entities = html => Array.from(html).map(ch=>{ const n=ch.codePointAt(0); return n>126?"&#"+n+";":ch; }).join("");
+
+/* =================== Ondas del pie (se dibujan con los colores elegidos) =================== */
+// Perfil medido del pie original (1200 px de ancho, 2x): periodo 700, amplitud 24.
+function drawWave(which, cardColor, footColor){
+  const c = document.createElement("canvas"); c.width = 1200; c.height = 84;
+  const g = c.getContext("2d");
+  g.fillStyle = cardColor; g.fillRect(0,0,1200,84);
+  g.fillStyle = footColor; g.beginPath();
+  if(which==="top"){
+    g.moveTo(0,84);
+    for(let x=0;x<=1200;x+=4) g.lineTo(x, 58 + 24*Math.cos(2*Math.PI*(x-100)/700));
+    g.lineTo(1200,84);
+  }else{
+    g.moveTo(0,0);
+    for(let x=0;x<=1200;x+=4) g.lineTo(x, 25 + 24*Math.cos(2*Math.PI*(x-637)/700));
+    g.lineTo(1200,0);
+  }
+  g.closePath(); g.fill();
+  return c;
+}
+const waveKey = () => (state.colors.card+"|"+state.colors.foot).toLowerCase();
+let localWaves = {}; // vista previa: data URLs
+function previewWaves(){
+  const k = waveKey();
+  if(!localWaves[k]) localWaves = {[k]:{top:drawWave("top",state.colors.card,state.colors.foot).toDataURL("image/png"),
+                                        bottom:drawWave("bottom",state.colors.card,state.colors.foot).toDataURL("image/png")}};
+  return localWaves[k];
+}
+
+/* =================== Plantilla =================== */
+function buildHTML(mode){ // mode: "preview" | "final"
+  const d = state.data, c = state.colors;
+  const H = FONTS_HEAD[state.fonts.head] || FONTS_HEAD.instrument;
+  const B = FONTS_BODY[state.fonts.body] || FONTS_BODY.helvetica;
+  const HF = H.css, BF = B.css;
+  let waves = null;
+  if(d.waves){
+    if(mode==="preview") waves = previewWaves();
+    else waves = state.waveCache[waveKey()] || null;
+  }
+
+  const pill = (t,href) => (t||"").trim() ? `<a href="${esc(href)}" target="_blank" style="display:inline-block;border:1.5px solid ${c.text};border-radius:999px;padding:7px 15px;margin-left:8px;color:${c.text};text-decoration:none;font-size:12px;line-height:14px;font-weight:700;letter-spacing:1.5px;font-family:${BF};">${esc(t)}</a>` : "";
+
+  const polaroid = (src, alt, cap, href, deg) => {
+    const img = `<img class="p-img" src="${esc(src)}" width="174" alt="${esc(alt)}" style="display:block;width:174px;height:auto;border-radius:5px;">`;
+    const capRow = (cap||"").trim() ? `<tr><td align="center" style="padding:12px 10px 16px;font-family:${HF};font-style:italic;font-weight:400;font-size:20px;line-height:22px;color:${c.text};">${esc(cap)}</td></tr>` : `<tr><td style="padding:0 0 12px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
+    const card = `<table role="presentation" class="polaroid" width="200" align="center" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.polaroid}" style="width:200px;background-color:${c.polaroid};border:1px solid ${c.polaroidBorder};border-radius:10px;box-shadow:0 8px 18px rgba(26,20,16,0.14);"><tr><td style="padding:12px 12px 0;line-height:0;font-size:0;">${img}</td></tr>${capRow}</table>`;
+    const tilted = d.tilt ? `<div style="transform:rotate(${deg}deg);">${card}</div>` : card;
+    return (href||"").trim() ? `<a href="${esc(href)}" target="_blank" style="text-decoration:none;">${tilted}</a>` : tilted;
+  };
+
+  const rows = [1,2,3,4].filter(n => (d["r"+n+"l"]||"").trim() || (d["r"+n+"v"]||"").trim());
+  const detail = rows.map((n,i) => {
+    const last = i===rows.length-1 ? `border-bottom:1px solid ${c.line};` : "";
+    return `<tr><td width="76" valign="top" style="width:76px;padding:8px 0;border-top:1px solid ${c.line};${last}font-family:${BF};font-size:11px;font-weight:700;letter-spacing:1.5px;color:${c.muted};">${esc(d["r"+n+"l"])}</td><td valign="top" style="padding:8px 0 8px 8px;border-top:1px solid ${c.line};${last}font-family:${BF};font-size:14px;line-height:20px;color:${c.text};">${br(d["r"+n+"v"])}</td></tr>`;
+  }).join("\n");
+
+  const hasPoster = (d.poster||"").trim();
+  const zone1Left = hasPoster ? `<td class="c-img" width="200" valign="top" style="width:200px;padding:6px 0 10px;">${polaroid(d.poster,d.posterAlt,d.posterCap,d.posterLink,-2)}</td>
+<td class="c-gap" width="26" style="width:26px;font-size:0;line-height:0;">&nbsp;</td>` : "";
+
+  const btn = (d.btn||"").trim() ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${c.btnBg}" style="background-color:${c.btnBg};border-radius:999px;"><a href="${esc(d.btnLink)}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:${BF};font-size:14px;font-weight:700;letter-spacing:1.5px;color:${c.btnText};text-decoration:none;">${esc(d.btn)}</a></td></tr></table>` : "";
+  const hasPhoto = (d.photo||"").trim();
+  const zone2Right = hasPhoto ? `<td class="c-gap" width="30" style="width:30px;font-size:0;line-height:0;">&nbsp;</td>
+<td class="c-img" width="200" valign="middle" style="width:200px;padding:6px 0 10px;">${polaroid(d.photo,d.photoAlt,d.photoCap,"",2)}</td>` : "";
+
+  const stores = (d.stores||"").split(/\r?\n/).filter(l=>l.trim()).map(l=>{
+    const i = l.indexOf(":");
+    return i>0 ? `<strong>${esc(l.slice(0,i).trim().toUpperCase())}</strong>&nbsp;&nbsp;${esc(l.slice(i+1).trim())}` : esc(l.trim());
+  }).join("<br>");
+
+  const waveRow = src => `<tr><td bgcolor="${c.card}" style="background-color:${c.card};padding:0;line-height:0;font-size:0;"><img src="${esc(src)}" width="600" alt="" style="display:block;width:100%;max-width:600px;height:auto;"></td></tr>`;
+  const footer = `${waves ? waveRow(waves.top) : ""}
+<tr><td class="pad" bgcolor="${c.foot}" style="background-color:${c.foot};padding:${waves?"26px":"44px"} 28px ${waves?"34px":"40px"};">
+<div class="foot-h" style="font-family:${HF};font-style:italic;font-weight:400;font-size:54px;line-height:52px;color:${c.footText};">${br(d.slogan)}</div>
+${stores ? `<p style="margin:30px 0 0;font-family:${BF};font-size:16px;line-height:26px;color:${c.footText};">${stores}</p>` : ""}
+</td></tr>
+${waves ? waveRow(waves.bottom) : ""}`;
+
+  const head = H.link ? `<link href="${H.link}" rel="stylesheet">` : "";
+  const html = `<!DOCTYPE html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${esc(d.title)}</title>
+${head}
+<style>
+  body{margin:0;padding:0;}
+  img{border:0;outline:none;text-decoration:none;}
+  a{color:${c.text};}
+  @media (max-width:620px){
+    .wrap{width:100% !important;}
+    .pad{padding-left:20px !important;padding-right:20px !important;box-sizing:border-box !important;}
+    .c-col{display:block !important;width:100% !important;box-sizing:border-box !important;}
+    .c-img{display:block !important;width:100% !important;box-sizing:border-box !important;padding:0 0 24px 0 !important;text-align:center !important;}
+    .polaroid{width:80% !important;max-width:330px !important;margin:0 auto !important;}
+    .p-img{width:100% !important;height:auto !important;}
+    .c-gap{display:none !important;width:0 !important;}
+    .c-pad{padding-bottom:26px !important;}
+    .c-title{font-size:38px !important;line-height:40px !important;}
+    .foot-h{font-size:44px !important;line-height:44px !important;}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:${c.outer};">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${esc(d.pre)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.outer}" style="background-color:${c.outer};">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.card}" style="width:600px;max-width:600px;background-color:${c.card};border-radius:28px;overflow:hidden;">
+<!-- Cabecera -->
+<tr><td class="pad" bgcolor="${c.card}" style="background-color:${c.card};padding:20px 28px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td align="left" valign="middle"><a href="${SITE}" target="_blank"><img src="${LOGOS[d.logo]||LOGOS.dark}" width="130" alt="NUDES" style="display:block;width:130px;height:auto;"></a></td>
+<td align="right" valign="middle" style="white-space:nowrap;">${pill(d.menuText,d.menuLink)}${pill(d.storesText,d.storesLink)}</td>
+</tr></table></td></tr>
+<!-- Zona 1: cartel, título y datos -->
+<tr><td class="pad" bgcolor="${c.card}" style="background-color:${c.card};padding:34px 28px 10px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+${zone1Left}
+<td class="c-col" valign="middle" style="padding:0;">
+${(d.eyebrow||"").trim() ? `<p style="margin:0 0 10px;font-family:${BF};font-size:13px;line-height:19px;color:${c.text};text-align:center;">${esc(d.eyebrow)}</p>` : ""}
+<div class="c-title" style="font-family:${HF};font-style:italic;font-weight:400;font-size:34px;line-height:36px;color:${c.text};text-align:center;">${br(d.title)}</div>
+${detail ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;">\n${detail}\n</table>` : ""}
+</td></tr></table>
+</td></tr>
+<!-- Zona 2: texto, botón y foto -->
+<tr><td class="pad" bgcolor="${c.card}" style="background-color:${c.card};padding:20px 28px 44px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td class="c-col c-pad" valign="middle" style="padding:0;">
+${paras(d.body, `margin:0 0 22px;font-family:${BF};font-size:16px;line-height:26px;color:${c.text};`)}
+${btn}
+</td>
+${zone2Right}
+</tr></table>
+</td></tr>
+<!-- Pie -->
+${footer}
+<!-- Pie legal. El enlace de baja es obligatorio -->
+<tr><td class="pad" bgcolor="${c.card}" style="background-color:${c.card};padding:${waves?"4px":"28px"} 28px 32px;">
+<p style="margin:0;font-family:${BF};font-size:13px;line-height:21px;color:${c.text};"><a href="https://instagram.com/eat.nudes" target="_blank" style="color:${c.text};font-weight:700;">@eat.nudes</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="${SITE}" target="_blank" style="color:${c.text};font-weight:700;">eatnudes.com</a></p>
+<p style="margin:12px 0 0;font-family:${BF};font-size:11px;line-height:17px;color:${c.muted};">Recibes este email porque te registraste en eatnudes.com.<br><a href="{{ unsubscribe }}" style="color:${c.muted};">Darte de baja</a> &nbsp;&middot;&nbsp; <a href="{{ mirror }}" style="color:${c.muted};">Ver en el navegador</a> &nbsp;&middot;&nbsp; info@eatnudes.com</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+  return entities(html);
+}
+
+/* =================== Subida de imágenes =================== */
+const hosted = () => HOSTED;
+function getPass(){ try{ return localStorage.getItem(LS_PASS)||""; }catch(e){ return ""; } }
+function setPass(v){ try{ localStorage.setItem(LS_PASS,v); }catch(e){} }
+
+async function shrink(file, maxW){
+  if(file.type==="image/gif") return file; // los GIF se suben tal cual (pueden ser animados)
+  const bmp = await createImageBitmap(file);
+  const s = Math.min(1, maxW/bmp.width);
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(bmp.width*s); cv.height = Math.round(bmp.height*s);
+  cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+  const png = file.type==="image/png";
+  return await new Promise(r => cv.toBlob(r, png?"image/png":"image/jpeg", .85));
+}
+function toBase64(blob){
+  return new Promise((ok,ko)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(",")[1]); r.onerror=ko; r.readAsDataURL(blob); });
+}
+async function uploadBlob(blob, name){
+  if(!hosted()) throw new Error("Para subir fotos abre el creador desde su dirección web. Desde un archivo en tu ordenador solo puedes pegar enlaces.");
+  let key = getPass();
+  if(!key){ key = (prompt("Clave del creador de emails (te la da tu desarrollador):")||"").trim(); if(!key) throw new Error("Sin clave no se pueden subir fotos."); setPass(key); }
+  const r = await fetch(UPLOAD_API, {method:"POST", headers:{"Content-Type":"application/json","x-builder-key":key},
+    body: JSON.stringify({name, type:blob.type, data: await toBase64(blob)})});
+  const j = await r.json().catch(()=>({}));
+  if(r.status===401){ setPass(""); throw new Error("Clave incorrecta. Vuelve a intentarlo."); }
+  if(!r.ok || !j.url) throw new Error(j.error || ("Error al subir ("+r.status+")."));
+  return j.url;
+}
+async function ensureWaves(){
+  if(!state.data.waves) return true;
+  const k = waveKey();
+  if(state.waveCache[k]) return true;
+  const toBlob = cv => new Promise(r=>cv.toBlob(r,"image/png"));
+  const top = await uploadBlob(await toBlob(drawWave("top",state.colors.card,state.colors.foot)), "onda-arriba");
+  const bottom = await uploadBlob(await toBlob(drawWave("bottom",state.colors.card,state.colors.foot)), "onda-abajo");
+  state.waveCache[k] = {top,bottom}; save();
+  return true;
+}
+
+/* =================== Comprobaciones =================== */
+function checks(html){
+  const d = state.data, c = state.colors, out = [];
+  const E = m=>out.push({t:"e",m}), W = m=>out.push({t:"w",m});
+  [["Cartel",d.poster,d.posterAlt],["Foto",d.photo,d.photoAlt]].forEach(([l,u,alt])=>{
+    if(!(u||"").trim()) return;
+    if(!/^https:\/\//i.test(u.trim())) E(`${l}: tiene que ser un enlace https:// público. Usa el botón SUBIR.`);
+    else if(/collab-sonar-/.test(u)) W(`${l}: es la foto de ejemplo. Sube la tuya con el botón SUBIR FOTO.`);
+    if(!(alt||"").trim()) W(`${l}: falta la descripción de la imagen.`);
+  });
+  [["Botón",d.btn,d.btnLink],["Cartel (enlace)",d.poster,d.posterLink],["MENU",d.menuText,d.menuLink],["STORES",d.storesText,d.storesLink]].forEach(([l,show,u])=>{
+    if(!(show||"").trim() || !(u||"").trim()) return;
+    if(!/^(https?:\/\/|mailto:)/i.test(u.trim())) E(`${l}: el enlace tiene que empezar por https://`);
+  });
+  if(!(d.title||"").trim()) E("Falta el título.");
+  if(d.waves && !state.waveCache[waveKey()]) W("Las ondas del pie con estos colores se subirán al pulsar COPIAR HTML.");
+  [["texto sobre el fondo",c.text,c.card],["texto del botón",c.btnText,c.btnBg],["texto del pie",c.footText,c.foot]].forEach(([n,a,b])=>{
+    const r = ratio(a,b); if(r<3) W(`Contraste bajo (${r.toFixed(1)}:1) en ${n}; costará leerlo.`);
+  });
+  const kb = new Blob([html]).size/1024;
+  if(kb>95) W(`El HTML pesa ${kb.toFixed(0)} KB. Gmail recorta los emails a partir de 102 KB.`);
+  if(!out.length) out.push({t:"k",m:"Todo en orden. Listo para copiar y pegar en Brevo."});
+  return {out,kb};
+}
+
+/* =================== Formulario =================== */
+const $ = id => document.getElementById(id);
+const T = (k,l,h) => ({t:"t",k,l,h}), A = (k,l,rows,h) => ({t:"a",k,l,rows,h}), I = (k,l,h) => ({t:"i",k,l,h}), R = n => ({t:"r",n}), C = (k,l) => ({t:"c",k,l});
+const SECTIONS = [
+  {title:"Cabecera", open:false, fields:[
+    {t:"sel",k:"logo",l:"Logo",opts:{dark:"Oscuro",white:"Blanco (para fondos oscuros)"}},
+    T("menuText","Botón 1 · texto","Déjalo vacío para quitarlo."), T("menuLink","Botón 1 · enlace"),
+    T("storesText","Botón 2 · texto","Déjalo vacío para quitarlo."), T("storesLink","Botón 2 · enlace")]},
+  {title:"Cartel y título", open:true, fields:[
+    I("poster","Cartel","Vertical, se recorta solo. Déjalo vacío para quitarlo."), T("posterAlt","Descripción del cartel"),
+    T("posterCap","Pie del cartel"), T("posterLink","Enlace del cartel"),
+    T("eyebrow","Texto pequeño sobre el título"), A("title","Título",2)]},
+  {title:"Datos", open:true, fields:[R(1),R(2),R(3),R(4)]},
+  {title:"Texto, botón y foto", open:true, fields:[
+    A("body","Texto",6,"Deja una línea en blanco para separar párrafos."),
+    T("btn","Texto del botón","Déjalo vacío para quitar el botón."), T("btnLink","Enlace del botón"),
+    I("photo","Foto","Déjala vacía para que el texto ocupe todo el ancho."), T("photoAlt","Descripción de la foto"), T("photoCap","Pie de la foto")]},
+  {title:"Pie", open:false, fields:[
+    A("slogan","Eslogan",2), A("stores","Tiendas",3,"Una línea por ciudad: CIUDAD: tiendas"),
+    C("waves","Ondas en el pie"), C("tilt","Fotos inclinadas tipo polaroid (se ven en Apple Mail; Gmail las muestra rectas)")]},
+  {title:"Colores", open:false, colors:true},
+  {title:"Tipografías", open:false, fonts:true},
+  {title:"Ajustes", open:false, settings:true}
+];
+const COLOR_LABELS = {outer:"Fondo exterior",card:"Fondo del email",text:"Texto",muted:"Etiquetas y letra pequeña",line:"Líneas",
+  polaroid:"Marco de las fotos",polaroidBorder:"Borde de las fotos",btnBg:"Botón",btnText:"Texto del botón",foot:"Pie y ondas",footText:"Texto del pie"};
+
+function fieldHTML(f){
+  const d = state.data;
+  if(f.t==="sel") return `<label>${esc(f.l)}</label><select data-k="${f.k}">${Object.entries(f.opts).map(([v,n])=>`<option value="${v}" ${d[f.k]===v?"selected":""}>${esc(n)}</option>`).join("")}</select>`;
+  if(f.t==="c") return `<label class="check"><input type="checkbox" data-k="${f.k}" ${d[f.k]?"checked":""}> ${esc(f.l)}</label>`;
+  if(f.t==="r") return `<label>Fila ${f.n}</label><div class="row2"><input type="text" data-k="r${f.n}l" value="${esc(d["r"+f.n+"l"])}" placeholder="ETIQUETA"><input type="text" data-k="r${f.n}v" value="${esc(d["r"+f.n+"v"])}" placeholder="${f.n===4?"Opcional":"Texto"}"></div>`;
+  const hint = f.h ? `<div class="hint">${esc(f.h)}</div>` : "";
+  if(f.t==="a") return `<label>${esc(f.l)}</label><textarea data-k="${f.k}" rows="${f.rows||3}">${esc(d[f.k])}</textarea>${hint}`;
+  if(f.t==="i") return `<label>${esc(f.l)}</label><div class="img-field"><img id="th_${f.k}" src="${esc(d[f.k])}" alt=""><input type="text" data-k="${f.k}" value="${esc(d[f.k])}" placeholder="https://…"></div>
+<div class="bar" style="margin-top:6px"><button type="button" class="btn sm" data-up="${f.k}">SUBIR FOTO</button><button type="button" class="btn alt sm" data-clear="${f.k}">QUITAR</button><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-file="${f.k}" hidden></div>${hint}`;
+  return `<label>${esc(f.l)}</label><input type="text" data-k="${f.k}" value="${esc(d[f.k])}">${hint}`;
+}
+function renderForm(){
+  let h = "";
+  for(const s of SECTIONS){
+    h += `<details ${s.open?"open":""}><summary>${esc(s.title)}</summary>`;
+    if(s.fields) h += s.fields.map(fieldHTML).join("");
+    if(s.colors) h += `<div class="colors">${Object.keys(DEFAULT.colors).map(k=>`<label><input type="color" data-c="${k}" value="${state.colors[k]}"> ${esc(COLOR_LABELS[k])}</label>`).join("")}</div>
+<div class="bar" style="margin-top:10px"><button type="button" class="btn alt sm" id="resetColors">COLORES ORIGINALES</button></div>`;
+    if(s.fonts) h += `<label>Títulos</label><select data-f="head">${Object.entries(FONTS_HEAD).map(([k,v])=>`<option value="${k}" ${state.fonts.head===k?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
+<label>Texto</label><select data-f="body">${Object.entries(FONTS_BODY).map(([k,v])=>`<option value="${k}" ${state.fonts.body===k?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
+<div class="hint">El email solo puede usar tipografías que tenga el ordenador o móvil de quien lo lee. Instrument Serif se ve en Apple Mail; Gmail y Outlook muestran Georgia.</div>`;
+    if(s.settings) h += `<label>Clave para subir fotos</label><input type="password" id="pass" value="${esc(getPass())}" placeholder="Te la da tu desarrollador">
+<label>Texto de vista previa en la bandeja</label><input type="text" data-k="pre" value="${esc(state.data.pre)}">
+<div class="lock" style="margin-top:14px">Las redes, el texto legal y el enlace “Darte de baja” no se pueden editar. Brevo los necesita para enviar.</div>
+<div class="bar" style="margin-top:14px"><button type="button" class="btn alt sm" id="reset">EMPEZAR DE CERO</button></div>`;
+    h += `</details>`;
+  }
+  $("form").innerHTML = h;
+
+  $("form").querySelectorAll("[data-k]").forEach(el=>{
+    const ev = el.type==="checkbox"||el.tagName==="SELECT" ? "change" : "input";
+    el.addEventListener(ev, ()=>{ state.data[el.dataset.k] = el.type==="checkbox" ? el.checked : el.value; const th=$("th_"+el.dataset.k); if(th) th.src=el.value; save(); refreshSoon(); });
+  });
+  $("form").querySelectorAll("[data-c]").forEach(el=>el.addEventListener("input",()=>{ state.colors[el.dataset.c]=el.value; save(); refreshSoon(); }));
+  $("form").querySelectorAll("[data-f]").forEach(el=>el.addEventListener("change",()=>{ state.fonts[el.dataset.f]=el.value; save(); refresh(); }));
+  $("form").querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>$("form").querySelector(`[data-file="${b.dataset.up}"]`).click());
+  $("form").querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>{ setField(b.dataset.clear,""); });
+  $("form").querySelectorAll("[data-file]").forEach(inp=>inp.onchange=async()=>{
+    const f = inp.files[0]; inp.value=""; if(!f) return;
+    const k = inp.dataset.file, btn = $("form").querySelector(`[data-up="${k}"]`);
+    btn.disabled = true; btn.textContent = "SUBIENDO…";
+    try{
+      const small = await shrink(f, 800);
+      const url = await uploadBlob(small, f.name);
+      setField(k, url); toast("Foto subida.");
+    }catch(e){ toast(e.message); }
+    finally{ btn.disabled=false; btn.textContent="SUBIR FOTO"; }
+  });
+  const pass = $("pass"); if(pass) pass.oninput = ()=>setPass(pass.value.trim());
+  $("resetColors").onclick = ()=>{ state.colors = clone(DEFAULT.colors); save(); renderForm(); refresh(); };
+  $("reset").onclick = ()=>{ if(confirm("Se borrarán todos los cambios. ¿Continuar?")){ const wc=state.waveCache; state=clone(DEFAULT); state.waveCache=wc; save(); renderForm(); refresh(); } };
+}
+function setField(k,v){
+  state.data[k]=v; save();
+  const el=$("form").querySelector(`[data-k="${k}"]`); if(el) el.value=v;
+  const th=$("th_"+k); if(th) th.src=v;
+  refresh();
+}
+
+/* =================== Vista previa y salida =================== */
+let timer;
+function refreshSoon(){ clearTimeout(timer); timer=setTimeout(refresh,160); }
+function refresh(){
+  const html = buildHTML("preview");
+  $("pv").srcdoc = html;
+  const {out,kb} = checks(html);
+  $("checks").innerHTML = out.map(o=>`<div class="it ${o.t}">${o.t==="e"?"✕":o.t==="w"?"!":"✓"} ${esc(o.m)}</div>`).join("") + `<div class="it hint">Tamaño: ${kb.toFixed(0)} KB</div>`;
+  window.__errors = out.filter(o=>o.t==="e").length;
+}
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("on"),3500); }
+
+async function finalHTML(){
+  if(state.data.waves){
+    try{ await ensureWaves(); }
+    catch(e){
+      if(!confirm(`No se pudieron subir las ondas del pie (${e.message}).\n\n¿Copiar el email con el pie plano, sin ondas?`)) return null;
+    }
+  }
+  return buildHTML("final");
+}
+$("copy").onclick = async ()=>{
+  if(window.__errors && !confirm(`Hay ${window.__errors} error(es) en las comprobaciones y el email puede fallar. ¿Copiar igualmente?`)) return;
+  const b=$("copy"); b.disabled=true;
+  try{
+    const html = await finalHTML(); if(!html) return;
+    try{ await navigator.clipboard.writeText(html); }
+    catch(e){ const ta=document.createElement("textarea"); ta.value=html; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+    toast("HTML copiado. En Brevo: Crear campaña → Email → Pegar tu código.");
+    refresh();
+  } finally { b.disabled=false; }
+};
+$("dl").onclick = async ()=>{
+  const html = await finalHTML(); if(!html) return;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  a.download="nudes-collab.html"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$("view").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  $("view").querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("pv").style.width=b.dataset.w+"px";
+});
+
+renderForm(); refresh();
+</script>
+</body>
+</html>
